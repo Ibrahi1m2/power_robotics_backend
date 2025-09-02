@@ -18,12 +18,31 @@ const cartImageRoutes = require('./routes/cartImage');
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Load environment variables
+require('dotenv').config();
+
 // Enhanced CORS configuration
+const allowedOrigins = process.env.FRONTEND_URLS ? 
+  process.env.FRONTEND_URLS.split(',') : 
+  ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'];
+
+console.log('Allowed origins:', allowedOrigins);
+
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
 }));
 
 app.use(express.json());
