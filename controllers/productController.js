@@ -3,22 +3,12 @@ const {db,db_promise} = require('../db');
 exports.getAllProducts = async (req, res) => {
   try {
     let { search, category_id, min_price, max_price, page, limit } = req.query;
-    let sql = `
-      SELECT p.*, c.name as category_name, v.shop_name as vendor_name 
-      FROM products p 
-      LEFT JOIN categories c ON p.category_id = c.id 
-      LEFT JOIN vendors v ON p.vendor_id = v.id 
-      WHERE 1=1
-    `;
+    let sql = ` SELECT p.* FROM products p `;
     let params = [];
 
     if (search) {
       sql += ' AND p.name LIKE ?';
       params.push(`%${search}%`);
-    }
-    if (category_id) {
-      sql += ' AND p.category_id = ?';
-      params.push(category_id);
     }
     if (min_price) {
       sql += ' AND p.price >= ?';
@@ -48,11 +38,7 @@ exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
     const sql = `
-      SELECT p.*, c.name as category_name, v.shop_name as vendor_name 
-      FROM products p 
-      LEFT JOIN categories c ON p.category_id = c.id 
-      LEFT JOIN vendors v ON p.vendor_id = v.id 
-      WHERE p.id = ?
+      SELECT p.* FROM products p  WHERE p.id = ?
     `;
 
     console.log("Fetching product with ID:", id);
@@ -171,9 +157,8 @@ exports.getProductsByCategory = (req, res) => {
 // Get deal of the week products
 exports.getDealOfTheWeek = (req, res) => {
   const sql = `
-    SELECT p.*, c.name as category_name 
+    SELECT p.* 
     FROM products p 
-    LEFT JOIN categories c ON p.category_id = c.id 
     WHERE p.is_deal_of_the_week = 1
     ORDER BY p.created_at DESC
   `;
