@@ -5,29 +5,44 @@ exports.getAllProducts = async (req, res) => {
     let { search, category_id, min_price, max_price, page, limit } = req.query;
     let sql = `
       SELECT p.*
-      FROM products p `;
+      FROM products p`;
+    let whereClauses = [];
     let params = [];
 
     if (search) {
-      sql += ' AND p.name LIKE ?';
+      whereClauses.push('p.name LIKE ?');
       params.push(`%${search}%`);
     }
     if (min_price) {
-      sql += ' AND p.price >= ?';
-      params.push(min_price);
+      whereClauses.push('p.price >= ?');
+      params.push(parseFloat(min_price));
     }
     if (max_price) {
-      sql += ' AND p.price <= ?';
-      params.push(max_price);
+      whereClauses.push('p.price <= ?');
+      params.push(parseFloat(max_price));
+    }
+    if (category_id) {
+      whereClauses.push('p.category_id = ?');
+      params.push(parseInt(category_id));
+    }
+
+    // Add WHERE clause if there are any conditions
+    if (whereClauses.length > 0) {
+      sql += ' WHERE ' + whereClauses.join(' AND ');
     }
 
     // Pagination
     page = parseInt(page) || 1;
     limit = parseInt(limit) || 20;
     const offset = (page - 1) * limit;
+    
+    // Add ORDER BY and pagination
     sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
-    params.push(limit, offset);
+    params.push(limit.toString(), offset.toString());
 
+    console.log('Executing query:', sql);
+    console.log('With params:', params);
+    
     const [results] = await db_promise.execute(sql, params);
     res.json(results);
   } catch (err) {
