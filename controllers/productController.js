@@ -3,7 +3,9 @@ const {db,db_promise} = require('../db');
 exports.getAllProducts = async (req, res) => {
   try {
     let { search, category_id, min_price, max_price, page, limit } = req.query;
-    let sql = ` SELECT p.* FROM products p `;
+    let sql = `
+      SELECT p.*
+      FROM products p `;
     let params = [];
 
     if (search) {
@@ -38,7 +40,9 @@ exports.getProductById = async (req, res) => {
   try {
     const { id } = req.params;
     const sql = `
-      SELECT p.* FROM products p  WHERE p.id = ?
+      SELECT p.*
+      FROM products p 
+      WHERE p.id = ?
     `;
 
     console.log("Fetching product with ID:", id);
@@ -142,8 +146,7 @@ exports.getProductsByCategory = (req, res) => {
   const { category_id } = req.params;
   const sql = `
     SELECT p.*, c.name as category_name 
-    FROM products p 
-    LEFT JOIN categories c ON p.category_id = c.id 
+    FROM products p  
     WHERE p.category_id = ?
     ORDER BY p.created_at DESC
   `;
