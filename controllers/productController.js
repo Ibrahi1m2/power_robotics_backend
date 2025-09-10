@@ -40,11 +40,25 @@ exports.getAllProducts = async (req, res) => {
     sql += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
     params.push(limit.toString(), offset.toString());
 
+    // Get total count for pagination
+    const countSql = `SELECT COUNT(*) as total FROM products${whereClauses.length > 0 ? ' WHERE ' + whereClauses.join(' AND ') : ''}`;
+    const [countResult] = await db_promise.query(countSql, params.slice(0, -2));
+    const total = countResult[0].total;
+    
     console.log('Executing query:', sql);
     console.log('With params:', params);
     
     const [results] = await db_promise.execute(sql, params);
-    res.json(results);
+    
+    res.json({
+      data: results,
+      pagination: {
+        total: total,
+        page: page,
+        limit: limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
   } catch (err) {
     console.error('Database error:', err);
     res.status(500).json({ message: 'Database error', error: err.message });
